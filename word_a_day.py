@@ -91,50 +91,37 @@ def getRandomWord():
 
 def scrapeForTranslation(word):
     """
-    Takes in a word then scrapes WordReference.com in order to get the Italian translation.
+    Takes in a word then scrapes Glosbe.com in order to get the Italian translation.
     If the word is not found the function returns none. 
     """
-
-    # get the html from wordreference and make it soup
-    source = requests.get(f'https://www.wordreference.com/enit/{word}')
+    # get the html from glosbe and make it soup
+    source = requests.get(f'https://glosbe.com/en/it/{word}')
     soup = BeautifulSoup(source.text, features='html.parser')
 
     # check to see if there was an error finding the word
-    possible_error = soup.find_all(id='noEntryFound')
+    possible_error = soup.find_all(class_='alert')
 
     if possible_error:
-        print("word not found on wordreference")
+        print('Word not on Glosbe.')
         return None, None, None
 
     else:
+        print('Word successfully pulled from Glosbe.')
+        # pull out italian translation of word
+        translated_word = soup.find(class_='phr').text
 
-        # select the translation words by class, isolate the word that should be the correct translation
-        words = soup.find_all(class_='ToWrd')
-        isolate_first_translation = words[1]
-
-        # pull out the text from inside the html element (somewhat tricky for given the html of the website...)
-        first_index = str(isolate_first_translation).find('>')
-        second_index = str(isolate_first_translation).find('<', 1)
-        translated_word = str(isolate_first_translation)[first_index + 1 : second_index]
-        print("Word found on word reference")
-
-        # pull out the examples
+        # pull out example in english
         try:
-            example_en = soup.find(class_='FrEx').text
-            print('English example obtained from word reference')
+            example_en = soup.find(class_='span6').text
         except:
             example_en = None
-            print('English example not available on word reference.')
-        
-        try: 
-            example_it = soup.find(class_='ToEx').text
-            print('Italian example obtained from word reference')
+
+        # pull out the example in italian
+        try:
+            example_it = soup.find_all(class_='span6')[1].text
         except:
             example_it = None
-            print('Italian example not available on word reference')
 
-
-        print(translated_word)
         return translated_word, example_en, example_it
 
 def formatText(input_text, formatting):
@@ -183,8 +170,12 @@ def compilePost(word, translation, example_en, example_it):
     # get hashtags
     hash1, hash2, hash3 = getHashtags()
 
+    # format text for examples
+    ex_en_italic = formatText(example_en, 'italic')
+    ex_it_italic = formatText(example_it, 'italic')
+
     # construct the tweet
-    tweet = f"{formatText('EN', 'bold')}: {word.capitalize()} \n{formatText('IT', 'bold')}: {translation.capitalize()}\n\n{example_en}\n{example_it}\n\n#{word.replace(' ', '')} #{hash1} #{hash2} #{hash3} "
+    tweet = f"{formatText('EN', 'bold')}: {word.capitalize()} \n{formatText('IT', 'bold')}: {translation.capitalize()}\n\n{ex_en_italic}\n\n{ex_it_italic}\n\n#{word.replace(' ', '')} #{hash1} #{hash2} #{hash3} "
 
     # check to be sure the length of the post is in limits
     if len(tweet) > 280:
