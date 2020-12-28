@@ -3,15 +3,17 @@ import os
 import random
 import requests
 import tweepy
+from decouple import config
+from bs4 import BeautifulSoup
 
 
 # env variables
-rapidAPIKey = os.environ.get("RAPID_API_KEY")
-twitterKey = os.environ.get("TWITTER_KEY")
-twitterSecretKey = os.environ.get("TWITTER_SECRET_KEY")
-twitterToken = os.environ.get("TWITTER_TOKEN")
-twitterAccessToken = os.environ.get("TWITTER_ACCESS_TOKEN")
-twitterAccessTokenSecret = os.environ.get("TWITTER_ACCESS_TOKEN_SECRET")
+rapidAPIKey = config("RAPID_API_KEY")
+twitterKey = config("TWITTER_KEY")
+twitterSecretKey = config("TWITTER_SECRET_KEY")
+twitterToken = config("TWITTER_TOKEN")
+twitterAccessToken = config("TWITTER_ACCESS_TOKEN")
+twitterAccessTokenSecret = config("TWITTER_ACCESS_TOKEN_SECRET")
 
 def main():
 
@@ -24,13 +26,13 @@ def main():
         word, definition, part_of_speech = getRandomWord()
 
         # get the Italian translation of the word
-        translation = translateToItalian(word)
+        translation, ex_en, ex_it = scrapeForTranslation(word)
             
         # check to see the translation was successful
-        if translation:
+        if translation and ex_en and ex_it:
 
             # compile post and check length
-            post = compilePost(word, translation, definition)
+            post = compilePost(word, translation, ex_en, ex_it)
 
             if post:
                 checks = True
@@ -51,6 +53,9 @@ def main():
         quit
 
 def getRandomWord():
+    """
+    Uses an API to get a random word.
+    """
 
     # URL call to get a random word
     url = "https://wordsapiv1.p.rapidapi.com/words/"
@@ -129,7 +134,59 @@ def translateToItalian(text):
         print("Error retreiving translation.")
         return None
 
+
+def scrapeForTranslation(word):
+    """
+    Takes in a word then scrapes WordReference.com in order to get the Italian translation.
+    If the word is not found the function returns none. 
+    """
+
+    # get the html from wordreference and make it soup
+    source = requests.get(f'https://www.wordreference.com/enit/{word}')
+    soup = BeautifulSoup(source.text, features='html.parser')
+
+    # check to see if there was an error finding the word
+    possible_error = soup.find_all(id='noEntryFound')
+
+    if possible_error:
+        print("word not found on wordreference")
+        return None, None, None
+
+    else:
+
+        # select the translation words by class, isolate the word that should be the correct translation
+        words = soup.find_all(class_='ToWrd')
+        isolate_first_translation = words[1]
+
+        # pull out the text from inside the html element (somewhat tricky for given the html of the website...)
+        first_index = str(isolate_first_translation).find('>')
+        second_index = str(isolate_first_translation).find('<', 1)
+        translated_word = str(isolate_first_translation)[first_index + 1 : second_index]
+        print("Word found on word reference")
+
+        # pull out the examples
+        try:
+            example_en = soup.find(class_='FrEx').text
+            print('English example obtained from word reference')
+        except:
+            example_en = None
+            print('English example not available on word reference.')
+        
+        try: 
+            example_it = soup.find(class_='ToEx').text
+            print('Italian example obtained from word reference')
+        except:
+            example_it = None
+            print('Italian example not available on word reference')
+
+
+        print(translated_word)
+        return translated_word, example_en, example_it
+
 def formatText(input_text, formatting):
+    """
+    A function for formatting text to either italic or bold.
+    """
 
     # list of chars with different formatting
     chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
@@ -151,6 +208,9 @@ def formatText(input_text, formatting):
     return output
 
 def getHashtags():
+    """
+    Randomly selects three relevant hashtags.
+    """
 
     hashtags = [
         "learnitalian", "italian", "learnlanguages", "vocabulary", "italiano", "wordaday", "dictionary", "languagelearning", "polyglot",
@@ -162,19 +222,16 @@ def getHashtags():
 
     return hashtags[random_ints[0]], hashtags[random_ints[1]], hashtags[random_ints[2]]
 
-def compilePost(word, translation, definition):
+def compilePost(word, translation, example_en, example_it):
 
-    # make the word bold, part of speech to italic
-    bold_word = formatText(translation.upper(), "bold")
 
-    word_def = f"{word.capitalize()}: {definition.capitalize()}"
-    word_def_italic = formatText(word_def, "italic")
+    #word_def_italic = formatText(word_def, "italic")
 
     # get hashtags
     hash1, hash2, hash3 = getHashtags()
 
     # construct the tweet
-    tweet = f"{bold_word}\n\n{word_def_italic}. \n\n#{word.replace(' ', '')} #{hash1} #{hash2} #{hash3} "
+    tweet = f"{formatText('EN', 'bold')}: {word.capitalize()} \n{formatText('IT', 'bold')}: {translation.capitalize()}\n\n{example_en}\n{example_it}\n\n#{word.replace(' ', '')} #{hash1} #{hash2} #{hash3} "
 
     # check to be sure the length of the post is in limits
     if len(tweet) > 280:
@@ -185,6 +242,9 @@ def compilePost(word, translation, definition):
         return tweet
 
 def postTweet(post):
+    """
+    Sends the post to Twitter.
+    """
 
     # authentication for Twitter API
     auth = tweepy.OAuthHandler(twitterKey, twitterSecretKey)
