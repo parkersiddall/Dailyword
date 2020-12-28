@@ -89,52 +89,6 @@ def getRandomWord():
     else:
         print("Error getting random word. Trying again...")
 
-def translateToItalian(text):
-
-    # identify URL for request
-    url = "https://translation19.p.rapidapi.com/v1/translation/text"
-
-    # create object data, inserting the word into the payload
-    payload = {
-        "source": {
-            "dialect":"en", 
-            "text": f"{text}"
-        },
-        "target":{
-            "dialect":"it"
-        }
-    }
-
-    # convert to json
-    payload_string = json.dumps(payload)
-
-    # declare headers
-    headers = {
-        'content-type': "application/json",
-        'x-rapidapi-key': rapidAPIKey,
-        'x-rapidapi-host': "translation19.p.rapidapi.com"
-        }
-
-    # make request
-    response = requests.request("POST", url, data=payload_string, headers=headers)
-    
-    # check to be sure response is OK
-    if response.status_code == 200:
-
-        i = response.json()  # convert to json
-
-        # print ok and return translation
-        if i["target"]["text"] is None:
-            print("Not able to translate the definition. Finding new word...")
-        else:
-            print("Translation received successfully.")
-        return i["target"]["text"]
-
-    else:
-        print("Error retreiving translation.")
-        return None
-
-
 def scrapeForTranslation(word):
     """
     Takes in a word then scrapes WordReference.com in order to get the Italian translation.
