@@ -177,10 +177,9 @@ def getHashtags():
     return hashtags[random_ints[0]], hashtags[random_ints[1]], hashtags[random_ints[2]]
 
 def compilePost(word, translation, example_en, example_it):
-
-
-    #word_def_italic = formatText(word_def, "italic")
-
+    """
+    Formats the contents of the post and makes sure the length is under 280 chars.
+    """
     # get hashtags
     hash1, hash2, hash3 = getHashtags()
 
