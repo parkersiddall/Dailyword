@@ -32,7 +32,7 @@ def main():
         if translation and ex_en and ex_it:
 
             # compile post and check length
-            post = compilePost(word, translation, ex_en, ex_it)
+            post = compilePost(word, translation, definition, part_of_speech)
 
             if post:
                 checks = True
@@ -108,7 +108,10 @@ def scrapeForTranslation(word):
     else:
         print('Word successfully pulled from Glosbe.')
         # pull out italian translation of word
-        translated_word = soup.find(class_='phr').text
+        try:
+            translated_word = soup.find(class_='phr').text
+        except:
+            translated_word = None
 
         # pull out example in english
         try:
@@ -163,7 +166,7 @@ def getHashtags():
 
     return hashtags[random_ints[0]], hashtags[random_ints[1]], hashtags[random_ints[2]]
 
-def compilePost(word, translation, example_en, example_it):
+def compilePost(word, translation, definition, part_of_speech):
     """
     Formats the contents of the post and makes sure the length is under 280 chars.
     """
@@ -171,14 +174,15 @@ def compilePost(word, translation, example_en, example_it):
     hash1, hash2, hash3 = getHashtags()
 
     # format text for examples
-    ex_en_italic = formatText(example_en, 'italic')
-    ex_it_italic = formatText(example_it, 'italic')
+    word_bold = formatText(word.upper(), 'bold')
+    trans_bold = formatText(translation.upper(), 'bold')
+    arrow = formatText('=>', 'bold')
 
     # construct the tweet
-    tweet = f"{formatText('EN', 'bold')}: {word.capitalize()} \n{formatText('IT', 'bold')}: {translation.capitalize()}\n\n{ex_en_italic}\n\n{ex_it_italic}\n\n#{word.replace(' ', '')} #{hash1} #{hash2} #{hash3} "
+    tweet = f"{trans_bold}\n\n{word.capitalize()}: {definition.capitalize()}.\n\n#{word.replace(' ', '')} #{hash1} #{hash2} #{hash3} "
 
     # check to be sure the length of the post is in limits
-    if len(tweet) > 280:
+    if len(tweet) > 270:
         print("Post too long. Finding new word...")
         return None
     else:

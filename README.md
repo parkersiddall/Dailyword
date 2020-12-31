@@ -1,7 +1,7 @@
 # Dailyword Twitter Bot
 A script that automates the creation and posting of tweets which provide followers with a daily word in English and Italian. 
 
-https://twitter.com/Dailyword_EN_IT
+https://twitter.com/DailyWord_IT
 
 
 ## How it works
