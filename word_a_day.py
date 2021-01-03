@@ -158,7 +158,7 @@ def getHashtags():
 
     hashtags = [
         "learnitalian", "italian", "learnlanguages", "vocabulary", "italiano", "wordaday", "dictionary", "languagelearning", "polyglot",
-        "multilingual", "studyhard", "italy", "italiano", "bilingual", "dailyword", "wordaday"
+        "multilingual", "studyhard", "italy", "italiano", "bilingual", "dailyword", "wordaday", "linguist", "linguistics", "translate", "translation"
     ]
 
     # get random ints
@@ -174,12 +174,12 @@ def compilePost(word, translation, definition, part_of_speech):
     hash1, hash2, hash3 = getHashtags()
 
     # format text for examples
-    word_bold = formatText(word.upper(), 'bold')
     trans_bold = formatText(translation.upper(), 'bold')
-    arrow = formatText('=>', 'bold')
+    word_italic = formatText(word.capitalize(), 'italic')
+    def_italic = formatText(definition.capitalize(), 'italic')
 
     # construct the tweet
-    tweet = f"{trans_bold}\n\n{word.capitalize()}: {definition.capitalize()}.\n\n#{word.replace(' ', '')} #{hash1} #{hash2} #{hash3} "
+    tweet = f"{trans_bold}\n\n{word_italic}: {def_italic}.\n\n#{word.replace(' ', '')} #{hash1} #{hash2} #{hash3}"
 
     # check to be sure the length of the post is in limits
     if len(tweet) > 270:
