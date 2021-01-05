@@ -1,5 +1,7 @@
+import csv
 import tweepy
 from decouple import config
+from datetime import date
 
 # env variables
 twitterKey = config("TWITTER_KEY")
@@ -27,13 +29,14 @@ queries = [
 # track outcome
 new_follows = 0
 already_following = 0
+result_limit = 10
 
 for query in queries:
 
     print(f'Now searching recent tweets for {query}...')
 
     # search tweets to find people who want to learn italian
-    learnItalian = api.search(q=query, count=10, result_type='recent')
+    learnItalian = api.search(q=query, count=result_limit, result_type='recent')
 
     # loop through results and like the follower of each tweet
     for tweet in learnItalian:
@@ -49,4 +52,15 @@ for query in queries:
 
 print(f'New follows: {new_follows}')
 print(f'Already following: {already_following}')
+
+# log data
+current_date = date.today()
+num_queries = len(queries)
+tot_queries_made = new_follows + already_following
+
+print('Writing data to CSV file...')
+with open('data/follow_users_data.csv', 'a', newline='') as csvfile:
+    writer = csv.writer(csvfile)
+    writer.writerow([current_date, num_queries, result_limit, new_follows, already_following, tot_queries_made])
+print('Process completed.')
 
