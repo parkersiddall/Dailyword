@@ -1,7 +1,9 @@
 # DailyWord Twitter Bot
-A series of scripts that automates the creation and posting of daily tweets, each containing an Italian word and its translation to English. Interaction with other tweets and users is also automized and runs on an hourly basis.
+A Twitter bot that uses a series of scripts to automates the creation and posting of daily tweets, each containing an Italian word and its translation to English. Interaction with other tweets and users is also automized and runs on an hourly basis. Performance of the scripts, along with general info about the Twitter account, is logged in various CSV files that can be found in /data.
 
 https://twitter.com/DailyWord_IT
+
+The bot was active for a period of 3 months and managed to earn about 400 followers. 
 
 
 ## word_a_day.py
